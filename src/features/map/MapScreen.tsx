@@ -26,14 +26,22 @@ export default function MapScreen() {
 
       {status === 'denied' && (
         <div className={styles.keyNotice}>
-          Localisation refusee. Autorise l'acces a ta position pour te situer sur
-          la carte.
+          Position refusee. Va dans Reglages &gt; Safari (ou le site) &gt;
+          Localisation, autorise l'acces, puis touche le bouton de position.
         </div>
       )}
-      {usingFallbackStyle && status !== 'denied' && (
+      {status === 'locating' && (
+        <div className={styles.keyNotice}>Recherche de ta position...</div>
+      )}
+      {(status === 'timeout' || status === 'unavailable') && (
         <div className={styles.keyNotice}>
-          Fond de carte de secours (sans cle TomTom). Rendu propre mais non
-          definitif.
+          Position introuvable. Verifie que la localisation est activee, puis
+          touche le bouton de position en bas a droite.
+        </div>
+      )}
+      {usingFallbackStyle && status === 'active' && (
+        <div className={styles.keyNotice}>
+          Fond de carte de secours (sans cle TomTom).
         </div>
       )}
     </div>

@@ -18,7 +18,7 @@ export function useUserLocation(map: MapLibreMap | null): {
   hasFix: boolean
   recenter: () => void
 } {
-  const { fix, status } = useGeolocation()
+  const { fix, status, request } = useGeolocation()
 
   const markerRef = useRef<maplibregl.Marker | null>(null)
   const markerAddedRef = useRef(false)
@@ -79,13 +79,16 @@ export function useUserLocation(map: MapLibreMap | null): {
 
   const recenter = useCallback(() => {
     setFollowing(true)
+    // relance une demande GPS depuis ce geste utilisateur (fiable sur iOS,
+    // et redeclenche l'invite d'autorisation si elle avait ete ratee)
+    request()
     if (map && fix) {
       map.flyTo({
         center: [fix.lngLat.lng, fix.lngLat.lat],
         zoom: Math.max(map.getZoom(), FOLLOW_ZOOM),
       })
     }
-  }, [map, fix])
+  }, [map, fix, request])
 
   return { status, following, hasFix: fix != null, recenter }
 }
