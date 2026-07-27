@@ -1,0 +1,57 @@
+.banner {
+  position: absolute;
+  top: calc(var(--az-safe-top) + var(--az-sp-3));
+  left: var(--az-sp-3);
+  right: var(--az-sp-3);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--az-sp-4);
+  padding: var(--az-sp-4);
+  /* fond sombre = fort contraste, lisible d'un coup d'oeil en conduite */
+  background: var(--az-text);
+  color: var(--az-text-inverse);
+  border-radius: var(--az-r-lg);
+  box-shadow: var(--az-shadow-2);
+}
+
+.icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--az-r-md);
+  background: var(--az-accent);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+
+.distance {
+  font-size: var(--az-fs-nav);
+  font-weight: var(--az-fw-bold);
+  line-height: 1.1;
+}
+
+.street {
+  margin-top: 2px;
+  font-size: var(--az-fs-md);
+  color: rgba(255, 255, 255, 0.82);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mute {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--az-r-pill);
+  color: var(--az-text-inverse);
+  background: rgba(255, 255, 255, 0.12);
+}

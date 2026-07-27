@@ -91,3 +91,32 @@
   font-size: var(--az-fs-sm);
   font-weight: var(--az-fw-medium);
 }
+
+.go,
+.stop {
+  width: 100%;
+  margin-top: var(--az-sp-4);
+  height: 54px;
+  border-radius: var(--az-r-md);
+  font-size: var(--az-fs-lg);
+  font-weight: var(--az-fw-semibold);
+}
+
+.go {
+  background: var(--az-accent);
+  color: var(--az-text-inverse);
+}
+
+.go:disabled {
+  background: var(--az-surface-3);
+  color: var(--az-text-3);
+}
+
+.go:active:not(:disabled) {
+  background: var(--az-accent-strong);
+}
+
+.stop {
+  background: var(--az-surface-2);
+  color: var(--az-danger);
+}

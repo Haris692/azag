@@ -1,7 +1,7 @@
 import { env, hasTomTomKey } from '../../config/env'
 import { LYON_CENTER } from '../../config/constants'
 import type { LngLat } from '../../lib/geo'
-import type { Place, Route } from './types'
+import type { Instruction, Place, Route } from './types'
 
 const BASE = 'https://api.tomtom.com'
 
@@ -46,7 +46,8 @@ export async function calculateRoute(from: LngLat, to: LngLat): Promise<Route> {
   const url =
     `${BASE}/routing/1/calculateRoute/${loc}/json` +
     `?key=${env.tomtomKey}` +
-    `&traffic=true&routeType=fastest&travelMode=car`
+    `&traffic=true&routeType=fastest&travelMode=car` +
+    `&instructionsType=text&language=fr-FR`
 
   const res = await fetch(url)
   if (!res.ok) throw new Error(`route ${res.status}`)
@@ -61,9 +62,20 @@ export async function calculateRoute(from: LngLat, to: LngLat): Promise<Route> {
   const path: LngLat[] = points.map((p) => ({ lng: p.longitude, lat: p.latitude }))
   const coordinates = path.map((p): [number, number] => [p.lng, p.lat])
 
+  const instructions: Instruction[] = (route.guidance?.instructions ?? []).map(
+    (i: any): Instruction => ({
+      offset: i.routeOffsetInMeters ?? 0,
+      point: { lng: i.point?.longitude ?? 0, lat: i.point?.latitude ?? 0 },
+      maneuver: i.maneuver ?? 'STRAIGHT',
+      message: i.message ?? '',
+      street: i.street,
+    }),
+  )
+
   return {
     coordinates,
     path,
+    instructions,
     summary: {
       lengthInMeters: route.summary.lengthInMeters,
       travelTimeInSeconds: route.summary.travelTimeInSeconds,

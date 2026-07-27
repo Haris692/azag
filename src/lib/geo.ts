@@ -53,6 +53,45 @@ export function distanceToPolylineMeters(p: LngLat, line: LngLat[]): number {
   return min
 }
 
+/** Projection d'un point sur un segment : renvoie {dist, t} (t dans [0,1]). */
+function projectPointToSegment(
+  p: LngLat,
+  a: LngLat,
+  b: LngLat,
+): { dist: number; t: number } {
+  const mPerLat = 111320
+  const mPerLon = 111320 * Math.cos(toRad(p.lat))
+  const ax = (a.lng - p.lng) * mPerLon
+  const ay = (a.lat - p.lat) * mPerLat
+  const bx = (b.lng - p.lng) * mPerLon
+  const by = (b.lat - p.lat) * mPerLat
+  const dx = bx - ax
+  const dy = by - ay
+  const len2 = dx * dx + dy * dy
+  let t = len2 === 0 ? 0 : (-ax * dx - ay * dy) / len2
+  t = Math.max(0, Math.min(1, t))
+  const cx = ax + t * dx
+  const cy = ay + t * dy
+  return { dist: Math.hypot(cx, cy), t }
+}
+
+/**
+ * Progression (m) le long d'une polyligne : distance cumulee depuis le depart
+ * jusqu'a la projection du point sur le segment le plus proche.
+ */
+export function routeProgressMeters(p: LngLat, line: LngLat[]): number {
+  if (line.length < 2) return 0
+  let best = { dist: Infinity, progress: 0 }
+  let cumul = 0
+  for (let i = 0; i < line.length - 1; i++) {
+    const segLen = distanceMeters(line[i], line[i + 1])
+    const { dist, t } = projectPointToSegment(p, line[i], line[i + 1])
+    if (dist < best.dist) best = { dist, progress: cumul + t * segLen }
+    cumul += segLen
+  }
+  return best.progress
+}
+
 /** Cap (bearing) en degres [0..360[, 0 = nord, sens horaire, de a vers b. */
 export function bearingDegrees(a: LngLat, b: LngLat): number {
   const lat1 = toRad(a.lat)

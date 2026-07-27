@@ -18,6 +18,19 @@ export type RouteSummary = {
   arrivalTime: string
 }
 
+/** Instruction de guidage turn-by-turn. */
+export type Instruction = {
+  /** distance cumulee depuis le depart, le long du trace (m) */
+  offset: number
+  point: LngLat
+  /** code manoeuvre TomTom : TURN_LEFT, KEEP_RIGHT, ARRIVE, ROUNDABOUT_*, ... */
+  maneuver: string
+  /** message pret a lire (voix) */
+  message: string
+  /** nom de rue si disponible (affichage bandeau) */
+  street?: string
+}
+
 /** Itineraire calcule. */
 export type Route = {
   /** trace en [lng, lat] pour MapLibre / GeoJSON */
@@ -25,4 +38,5 @@ export type Route = {
   /** meme trace en LngLat pour les calculs geo (deviation) */
   path: LngLat[]
   summary: RouteSummary
+  instructions: Instruction[]
 }
