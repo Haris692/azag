@@ -39,7 +39,12 @@ Fait :
   coupe si l'utilisateur manipule la carte, reactive au clic.
 - Verifie en browser : geoloc fonctionnelle, auto-zoom sur position reelle, fleche orientee.
 
-Reste (avant validation finale) : style de carte clair finalise sur TomTom Orbis (necessite la cle).
+- Cle TomTom configuree (GitHub Secret VITE_TOMTOM_KEY), deja restreinte au domaine github.io.
+  Fond TomTom Orbis actif en prod ; style retenu pour l'instant : basic_street-light
+  (colore, valide par Haris "on reste comme ca"). En local : fallback CARTO (referer localhost non autorise).
+- Bug taille canvas MapLibre corrige (ResizeObserver + resize on load).
+
+Note : style Orbis charge via chemin de version wildcard '0.*'.
 ## Phase 2 - Routing  [A VENIR]
 ## Phase 3 - Guidage  [A VENIR]
 ## Phase 4 - Signalements backend  [A VENIR]
