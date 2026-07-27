@@ -82,6 +82,24 @@ Ajouts Phase 3+ (verifies en prod) :
 - Camera 3e personne en navigation : pitch 58, orientation sur le cap (bearing=heading),
   zoom rue, position placee en bas d'ecran (offset), reset a plat a l'arret.
   L'orientation au cap n'est visible qu'en mouvement (cap inconnu a l'arret).
+
+## Phase bonus - Moteur d'apprentissage d'itineraire  [FAIT - a valider]
+
+Deroge au brief (IA hors MVP), a la demande de Haris. 100% on-device, prive.
+
+Fait et verifie (logique en node + UI en prod) :
+- Feature % autoroute par trajet (sectionType=motorway -> highwayShare).
+- Contexte : heure, matin/soir/nuit, week-end, jours feries FR (calcul Meeus/Butcher).
+- Modele : ranking pairwise en ligne (SGD, 8 features avec interactions autoroute x contexte),
+  poids clippes, persistes en localStorage (azag.route_model.v1). Prior = le plus rapide.
+- Apprend au tap Demarrer (choix confirme). Pre-selectionne l'itineraire suggere + explication.
+- RouteSheet : badge "Suggere pour toi · <raison>" sur l'option apprise (si divergence du + rapide).
+- Test node : apres 6 choix autoroute le matin -> bascule sur autoroute ; le soir (non appris)
+  reste au + rapide (pas de generalisation abusive). UI : badge + pre-selection verifies en prod.
+
+Limites connues : s'ameliore avec l'usage (pas magique des la 1re fois) ; "evenements" reels
+(concerts/matchs) non couverts (pas de source gratuite) -> incidents TomTom possibles plus tard ;
+meteo non integree (choix Haris : cote apprentissage + heure/date d'abord).
 ## Phase 4 - Signalements backend  [A VENIR]
 ## Phase 5 - Signalements front  [A VENIR]
 ## Phase 6 - Polish & perf  [A VENIR]
