@@ -74,6 +74,14 @@ Test valide : recherche Aeroport St-Exupery -> apercu 25 min/28,7 km -> Demarrer
 "90 m / Avenue des Freres Perret" + suivi -> Terminer reinitialise.
 
 A confirmer sur iPhone reel : voix (audio) + WakeLock, non verifiables par screenshot.
+
+Ajouts Phase 3+ (verifies en prod) :
+- Alternatives d'itineraire : calculateRoutes (maxAlternatives=2), cartes selectionnables
+  dans l'apercu (temps/distance/trafic, triees par temps), alternatives grisees sur la carte,
+  masquees en navigation.
+- Camera 3e personne en navigation : pitch 58, orientation sur le cap (bearing=heading),
+  zoom rue, position placee en bas d'ecran (offset), reset a plat a l'arret.
+  L'orientation au cap n'est visible qu'en mouvement (cap inconnu a l'arret).
 ## Phase 4 - Signalements backend  [A VENIR]
 ## Phase 5 - Signalements front  [A VENIR]
 ## Phase 6 - Polish & perf  [A VENIR]
