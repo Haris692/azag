@@ -2,37 +2,39 @@ import type { StyleSpecification } from 'maplibre-gl'
 import { env, hasTomTomKey } from '../../config/env'
 import { TOMTOM_ORBIS_STYLE_LIGHT } from '../../config/constants'
 
-// Fond de carte.
-// - Si une cle TomTom est presente : on utilise le style vectoriel Orbis clair
-//   (URL de style, la cle est passee en query param).
-// - Sinon (Phase 0 sans cle) : fallback raster neutre pour que l'app tourne.
-//   Ce fallback n'est PAS le rendu cible ; il evite juste une carte vide.
+// Fond de carte, direction claire minimale (facon Apple Maps / Waze light).
+// - Si une cle TomTom est presente : style vectoriel Orbis clair (rendu cible).
+// - Sinon : CARTO Positron, un fond raster clair et epure, gratuit et sans cle.
+//   Bien plus propre que le raster OSM brut, et coherent avec la DA sobre.
 
 export function getMapStyle(): string | StyleSpecification {
   if (hasTomTomKey()) {
     return `${TOMTOM_ORBIS_STYLE_LIGHT}&key=${encodeURIComponent(env.tomtomKey)}`
   }
-  return FALLBACK_STYLE
+  return POSITRON_STYLE
 }
 
 export const usingFallbackStyle = !hasTomTomKey()
 
-// Fallback minimal en attendant la cle TomTom (raster OSM, usage dev uniquement).
-const FALLBACK_STYLE: StyleSpecification = {
+// CARTO Positron (light, sans labels criards) : minimaliste, blanc dominant.
+const POSITRON_STYLE: StyleSpecification = {
   version: 8,
   sources: {
-    'osm-raster': {
+    carto: {
       type: 'raster',
-      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tiles: [
+        'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{ratio}.png',
+        'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{ratio}.png',
+        'https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{ratio}.png',
+        'https://d.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{ratio}.png',
+      ].map((u) => u.replace('{ratio}', devicePixelRatio > 1 ? '@2x' : '')),
       tileSize: 256,
-      attribution: '(c) OpenStreetMap contributors',
+      attribution:
+        '(c) <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors (c) <a href="https://carto.com/attributions">CARTO</a>',
     },
   },
   layers: [
-    {
-      id: 'osm-raster',
-      type: 'raster',
-      source: 'osm-raster',
-    },
+    { id: 'bg', type: 'background', paint: { 'background-color': '#f5f6f7' } },
+    { id: 'carto', type: 'raster', source: 'carto' },
   ],
 }

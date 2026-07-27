@@ -1,0 +1,24 @@
+.btn {
+  position: absolute;
+  right: var(--az-sp-4);
+  bottom: calc(var(--az-safe-bottom) + var(--az-sp-5));
+  z-index: 20;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--az-r-pill);
+  background: var(--az-surface);
+  color: var(--az-text-2);
+  box-shadow: var(--az-shadow-2);
+  transition: color 0.15s ease, transform 0.1s ease;
+}
+
+.btn:active {
+  transform: scale(0.94);
+}
+
+/* suivi actif : l'icone passe en accent */
+.active {
+  color: var(--az-accent);
+}

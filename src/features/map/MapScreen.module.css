@@ -26,7 +26,8 @@
 .keyNotice {
   position: absolute;
   left: var(--az-sp-4);
-  right: var(--az-sp-4);
+  /* laisse la place au bouton flottant de recentrage a droite */
+  right: calc(var(--az-sp-4) + 64px);
   bottom: calc(var(--az-safe-bottom) + var(--az-sp-4));
   z-index: 10;
   padding: var(--az-sp-3) var(--az-sp-4);

@@ -26,7 +26,20 @@ A faire avant validation finale (cote Haris) :
 - Renseigner les GitHub Secrets du repo
 - Activer GitHub Pages (source : GitHub Actions)
 
-## Phase 1 - Carte & geoloc  [A VENIR]
+## Phase 1 - Carte & geoloc  [EN COURS]
+
+Fait :
+- Fond de carte minimaliste : CARTO Positron (clair, epure, gratuit, sans cle) en
+  remplacement du raster OSM brut. Bascule auto sur TomTom Orbis clair si cle presente.
+- Position utilisateur : marqueur pastille + halo pulsant + fleche de cap (facon
+  Apple Maps / Waze). Fleche orientee au cap GPS si fiable, sinon derivee du deplacement ;
+  masquee a l'arret.
+- Suivi GPS throttle (watchPosition, filtre anti-jitter MIN_MOVE 2 m).
+- Auto-centrage au premier fix (zoom 16), bouton de recentrage flottant, mode suivi
+  coupe si l'utilisateur manipule la carte, reactive au clic.
+- Verifie en browser : geoloc fonctionnelle, auto-zoom sur position reelle, fleche orientee.
+
+Reste (avant validation finale) : style de carte clair finalise sur TomTom Orbis (necessite la cle).
 ## Phase 2 - Routing  [A VENIR]
 ## Phase 3 - Guidage  [A VENIR]
 ## Phase 4 - Signalements backend  [A VENIR]
