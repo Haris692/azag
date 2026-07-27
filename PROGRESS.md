@@ -58,7 +58,22 @@ Fait et verifie en prod (browser) :
 - Bouton de position remonte au-dessus de la feuille quand un itineraire est actif.
 
 Test valide : "Gare Part-Dieu" -> suggestions -> trace + "27 min / 11,5 km / arrivee 11:33" -> X reinitialise.
-## Phase 3 - Guidage  [A VENIR]
+## Phase 3 - Guidage  [FAIT - a valider]
+
+Fait et verifie en prod (browser) :
+- Instructions turn-by-turn recuperees (instructionsType=text, fr-FR) dans calculateRoute.
+- routeProgressMeters : progression le long du trace -> prochaine manoeuvre + distance.
+- useNavigation : step courant, annonces vocales Web Speech a 2 seuils (loin 260m / imminent 45m),
+  detection d'arrivee (<25m). primeSpeech() au tap Demarrer (deblocage voix iOS).
+- GuidanceBanner : bandeau haut fort contraste (icone manoeuvre + grande distance + rue) + bouton mute.
+- ManeuverIcon : icones de manoeuvres (tout droit, gauche/droite, leger, serre, u-turn, rond-point, arrivee, depart).
+- useWakeLock : ecran maintenu allume pendant la nav, relache a l'arret / re-acquis au retour au premier plan.
+- Mode conduite : apercu (bouton Demarrer + ETA) -> navigation (bandeau + restant + Terminer).
+
+Test valide : recherche Aeroport St-Exupery -> apercu 25 min/28,7 km -> Demarrer -> bandeau
+"90 m / Avenue des Freres Perret" + suivi -> Terminer reinitialise.
+
+A confirmer sur iPhone reel : voix (audio) + WakeLock, non verifiables par screenshot.
 ## Phase 4 - Signalements backend  [A VENIR]
 ## Phase 5 - Signalements front  [A VENIR]
 ## Phase 6 - Polish & perf  [A VENIR]
