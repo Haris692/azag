@@ -82,6 +82,9 @@ Ajouts Phase 3+ (verifies en prod) :
 - Camera 3e personne en navigation : pitch 58, orientation sur le cap (bearing=heading),
   zoom rue, position placee en bas d'ecran (offset), reset a plat a l'arret.
   L'orientation au cap n'est visible qu'en mouvement (cap inconnu a l'arret).
+- Navigation fluide : snap-to-route (position accrochee au trace, fleche orientee route) +
+  boucle requestAnimationFrame qui lisse position/cap/zoom/pitch -> plus de saccade ni zigzag.
+  Trace passe via ref pour eviter le cycle routing<->localisation. A confirmer en mouvement sur iPhone.
 
 ## Phase bonus - Moteur d'apprentissage d'itineraire  [FAIT - a valider]
 
