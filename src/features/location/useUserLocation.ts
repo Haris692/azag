@@ -4,6 +4,8 @@ import { useGeolocation, type GeoStatus } from './useGeolocation'
 import { createUserMarkerElement } from './userMarkerElement'
 
 const FOLLOW_ZOOM = 16
+// zoom applique quand on touche le bouton de recentrage (niveau rue)
+const RECENTER_ZOOM = 17
 
 /**
  * Affiche et met a jour le marqueur de position sur la carte.
@@ -83,9 +85,10 @@ export function useUserLocation(map: MapLibreMap | null): {
     // et redeclenche l'invite d'autorisation si elle avait ete ratee)
     request()
     if (map && fix) {
+      // zoome toujours sur la position (niveau rue) au tap du bouton
       map.flyTo({
         center: [fix.lngLat.lng, fix.lngLat.lat],
-        zoom: Math.max(map.getZoom(), FOLLOW_ZOOM),
+        zoom: RECENTER_ZOOM,
       })
     }
   }, [map, fix, request])
