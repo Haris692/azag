@@ -45,7 +45,19 @@ Fait :
 - Bug taille canvas MapLibre corrige (ResizeObserver + resize on load).
 
 Note : style Orbis charge via chemin de version wildcard '0.*'.
-## Phase 2 - Routing  [A VENIR]
+## Phase 2 - Routing  [FAIT - a valider]
+
+Fait et verifie en prod (browser) :
+- Client API TomTom : searchPlaces (geocoding/POI, biais autour de la position) +
+  calculateRoute (routeType=fastest, traffic=true).
+- SearchBar : saisie destination, suggestions debouncees (320ms, min 3 car), nom + adresse.
+- Trace itineraire sur la carte : couche ligne accent + casing blanc (routeLayer), cadrage auto (fitBounds).
+- RouteSheet : ETA (duree), distance, heure d'arrivee, badge delai trafic, bouton annuler.
+- useRouting : recalcul sur deviation reelle (>45m, 2 fixes consecutifs, cooldown 12s) pour
+  proteger le quota non-tile. Depart = position utilisateur (fallback centre carte).
+- Bouton de position remonte au-dessus de la feuille quand un itineraire est actif.
+
+Test valide : "Gare Part-Dieu" -> suggestions -> trace + "27 min / 11,5 km / arrivee 11:33" -> X reinitialise.
 ## Phase 3 - Guidage  [A VENIR]
 ## Phase 4 - Signalements backend  [A VENIR]
 ## Phase 5 - Signalements front  [A VENIR]
