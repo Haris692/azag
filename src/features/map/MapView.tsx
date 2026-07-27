@@ -28,9 +28,18 @@ export default function MapView({ onReady }: MapViewProps) {
     })
 
     mapRef.current = map
-    map.once('load', () => onReady?.(map))
+    map.once('load', () => {
+      map.resize() // garantit que le canvas remplit son conteneur au 1er rendu
+      onReady?.(map)
+    })
+
+    // le conteneur est en position absolue plein ecran : on force le resize
+    // du canvas des que ses dimensions changent (rotation, clavier, etc.)
+    const ro = new ResizeObserver(() => map.resize())
+    ro.observe(containerRef.current)
 
     return () => {
+      ro.disconnect()
       map.remove()
       mapRef.current = null
     }
