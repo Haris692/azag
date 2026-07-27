@@ -2,27 +2,40 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import maplibregl, { type Map as MapLibreMap } from 'maplibre-gl'
 import { useGeolocation, type GeoStatus, type UserFix } from './useGeolocation'
 import { createUserMarkerElement } from './userMarkerElement'
+import { snapToPath, type LngLat } from '../../lib/geo'
 
 const FOLLOW_ZOOM = 16
-// zoom applique quand on touche le bouton de recentrage (niveau rue)
 const RECENTER_ZOOM = 17
 // vue conduite 3e personne
 const CHASE_ZOOM = 17.5
 const CHASE_PITCH = 58
-// decale la position vers le bas de l'ecran pour voir la route devant (px)
-const CHASE_OFFSET_Y = 130
+
+// facteurs de lissage par frame (plus petit = plus doux/plus de latence)
+const K_POS = 0.18
+const K_BEARING = 0.14
+const K_ZP = 0.1
+
+type Pose = { lng: number; lat: number; bearing: number; zoom: number; pitch: number }
+
+/** interpolation d'angle en prenant le plus court chemin */
+function lerpAngle(a: number, b: number, k: number): number {
+  let d = ((b - a + 540) % 360) - 180
+  return a + d * k
+}
 
 /**
- * Affiche et met a jour le marqueur de position sur la carte.
- * - Centre automatiquement sur l'utilisateur au premier fix.
- * - Mode "suivi" : la carte reste centree sur l'utilisateur ; il se coupe
- *   des que l'utilisateur deplace la carte a la main, et se reactive via recenter().
- * - Mode "chase" (navigation) : vue 3e personne inclinee, orientee sur le cap,
- *   avec la position placee en bas de l'ecran.
+ * Affiche/suit la position utilisateur.
+ * - Hors navigation : marqueur simple + camera qui suit (easeTo).
+ * - En navigation (`chase`) : vue 3e personne inclinee, ET surtout un rendu
+ *   FLUIDE : la position GPS (bruitee, discrete) est accrochee au trace
+ *   (snap-to-route) puis une boucle rAF fait glisser la fleche et la camera en
+ *   douceur vers cette cible -> plus de saut ni de zigzag, la fleche avance
+ *   regulierement le long de la route.
  */
 export function useUserLocation(
   map: MapLibreMap | null,
   chase = false,
+  snapPathRef?: { current: LngLat[] | null },
 ): {
   status: GeoStatus
   following: boolean
@@ -37,8 +50,13 @@ export function useUserLocation(
   const setHeadingKnownRef = useRef<((known: boolean) => void) | null>(null)
   const didFirstCenterRef = useRef(false)
   const [following, setFollowing] = useState(true)
-  const chaseRef = useRef(chase)
-  chaseRef.current = chase
+
+  // refs lus par la boucle d'animation
+  const fixRef = useRef<UserFix | null>(null)
+  const followingRef = useRef(true)
+  const poseRef = useRef<Pose | null>(null)
+  fixRef.current = fix
+  followingRef.current = following
 
   // cree le marqueur une fois la carte prete
   useEffect(() => {
@@ -47,11 +65,10 @@ export function useUserLocation(
     setHeadingKnownRef.current = setHeadingKnown
     markerRef.current = new maplibregl.Marker({
       element: el,
-      rotationAlignment: 'map', // la fleche suit l'orientation de la carte
+      rotationAlignment: 'map',
       pitchAlignment: 'map',
     })
 
-    // couper le suivi des que l'utilisateur manipule la carte lui-meme
     const stopFollow = () => setFollowing(false)
     map.on('dragstart', stopFollow)
     map.on('rotatestart', stopFollow)
@@ -65,9 +82,9 @@ export function useUserLocation(
     }
   }, [map])
 
-  // camera qui suit la position a chaque fix
+  // HORS navigation : marqueur + camera classiques (easeTo)
   useEffect(() => {
-    if (!map || !fix || !markerRef.current) return
+    if (chase || !map || !fix || !markerRef.current) return
     const marker = markerRef.current
 
     marker.setLngLat([fix.lngLat.lng, fix.lngLat.lat])
@@ -75,7 +92,6 @@ export function useUserLocation(
       marker.addTo(map)
       markerAddedRef.current = true
     }
-
     if (fix.heading != null) {
       marker.setRotation(fix.heading)
       setHeadingKnownRef.current?.(true)
@@ -84,52 +100,105 @@ export function useUserLocation(
     }
 
     const center: [number, number] = [fix.lngLat.lng, fix.lngLat.lat]
-
-    if (!didFirstCenterRef.current && !chase) {
+    if (!didFirstCenterRef.current) {
       didFirstCenterRef.current = true
       map.flyTo({ center, zoom: FOLLOW_ZOOM })
-    } else if (following && chase) {
-      // vue 3e personne : oriente sur le cap, inclinee, position en bas d'ecran
-      map.easeTo({
-        center,
-        zoom: Math.max(map.getZoom(), CHASE_ZOOM),
-        pitch: CHASE_PITCH,
-        bearing: fix.heading ?? map.getBearing(),
-        offset: [0, CHASE_OFFSET_Y],
-        duration: 700,
-      })
     } else if (following) {
       map.easeTo({ center, duration: 500 })
     }
   }, [map, fix, following, chase])
 
-  // reset de la vue (pitch/bearing/offset) quand on quitte le mode chase
+  // EN navigation : boucle rAF de lissage (snap-to-route + interpolation)
   useEffect(() => {
-    if (!map || chase) return
-    map.easeTo({ pitch: 0, bearing: 0, offset: [0, 0], duration: 500 })
+    if (!map || !chase) return
+    const marker = markerRef.current
+    if (marker && !markerAddedRef.current) {
+      marker.addTo(map)
+      markerAddedRef.current = true
+    }
+
+    // vue de depart pour la boucle = camera actuelle
+    const c = map.getCenter()
+    poseRef.current = {
+      lng: c.lng,
+      lat: c.lat,
+      bearing: map.getBearing(),
+      zoom: map.getZoom(),
+      pitch: map.getPitch(),
+    }
+
+    // place la position en bas d'ecran via le padding haut
+    const h = map.getContainer().clientHeight
+    map.setPadding({ top: Math.round(h * 0.42), bottom: 0, left: 0, right: 0 })
+
+    let raf = 0
+    const tick = () => {
+      const f = fixRef.current
+      const pose = poseRef.current
+      if (f && pose && marker) {
+        // cible : position accrochee au trace (sinon position brute)
+        const path = snapPathRef?.current ?? null
+        let tLng = f.lngLat.lng
+        let tLat = f.lngLat.lat
+        let tBearing = f.heading ?? pose.bearing
+        if (path && path.length >= 2) {
+          const s = snapToPath(f.lngLat, path)
+          tLng = s.point.lng
+          tLat = s.point.lat
+          tBearing = s.bearing
+        }
+
+        // lissage vers la cible
+        pose.lng += (tLng - pose.lng) * K_POS
+        pose.lat += (tLat - pose.lat) * K_POS
+        pose.bearing = lerpAngle(pose.bearing, tBearing, K_BEARING)
+        pose.zoom += (CHASE_ZOOM - pose.zoom) * K_ZP
+        pose.pitch += (CHASE_PITCH - pose.pitch) * K_ZP
+
+        marker.setLngLat([pose.lng, pose.lat])
+        marker.setRotation(pose.bearing)
+        setHeadingKnownRef.current?.(true)
+
+        if (followingRef.current) {
+          map.jumpTo({
+            center: [pose.lng, pose.lat],
+            bearing: pose.bearing,
+            zoom: pose.zoom,
+            pitch: pose.pitch,
+          })
+        }
+      }
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+
+    return () => {
+      cancelAnimationFrame(raf)
+      // restaure la vue a plat en sortie de navigation
+      map.setPadding({ top: 0, bottom: 0, left: 0, right: 0 })
+      map.easeTo({ pitch: 0, bearing: 0, duration: 500 })
+    }
   }, [map, chase])
 
   const recenter = useCallback(() => {
     setFollowing(true)
-    // relance une demande GPS depuis ce geste utilisateur (fiable sur iOS,
-    // et redeclenche l'invite d'autorisation si elle avait ete ratee)
     request()
     if (map && fix) {
       const center: [number, number] = [fix.lngLat.lng, fix.lngLat.lat]
-      if (chaseRef.current) {
-        map.easeTo({
-          center,
+      if (chase) {
+        // la boucle rAF reprend la main ; on repositionne juste la vue courante
+        poseRef.current = {
+          lng: center[0],
+          lat: center[1],
+          bearing: fix.heading ?? map.getBearing(),
           zoom: CHASE_ZOOM,
           pitch: CHASE_PITCH,
-          bearing: fix.heading ?? map.getBearing(),
-          offset: [0, CHASE_OFFSET_Y],
-          duration: 600,
-        })
+        }
       } else {
         map.flyTo({ center, zoom: RECENTER_ZOOM })
       }
     }
-  }, [map, fix, request])
+  }, [map, fix, request, chase])
 
   return { status, following, hasFix: fix != null, fix, recenter }
 }

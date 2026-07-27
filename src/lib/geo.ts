@@ -76,6 +76,33 @@ function projectPointToSegment(
 }
 
 /**
+ * Accroche un point au trace : renvoie le point projete sur le segment le plus
+ * proche + le cap de ce segment. Sert a faire glisser la fleche SUR la route
+ * (fini le zigzag lateral du GPS brut).
+ */
+export function snapToPath(
+  p: LngLat,
+  line: LngLat[],
+): { point: LngLat; bearing: number } {
+  if (line.length === 0) return { point: p, bearing: 0 }
+  if (line.length === 1) return { point: line[0], bearing: 0 }
+  let best = { dist: Infinity, point: line[0], bearing: 0 }
+  for (let i = 0; i < line.length - 1; i++) {
+    const a = line[i]
+    const b = line[i + 1]
+    const { dist, t } = projectPointToSegment(p, a, b)
+    if (dist < best.dist) {
+      best = {
+        dist,
+        point: { lng: a.lng + t * (b.lng - a.lng), lat: a.lat + t * (b.lat - a.lat) },
+        bearing: bearingDegrees(a, b),
+      }
+    }
+  }
+  return { point: best.point, bearing: best.bearing }
+}
+
+/**
  * Progression (m) le long d'une polyligne : distance cumulee depuis le depart
  * jusqu'a la projection du point sur le segment le plus proche.
  */

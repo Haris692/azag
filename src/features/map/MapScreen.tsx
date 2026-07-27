@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Map as MapLibreMap } from 'maplibre-gl'
+import type { LngLat } from '../../lib/geo'
 import MapView from './MapView'
 import { useUserLocation } from '../location/useUserLocation'
 import LocateButton from '../location/LocateButton'
@@ -21,8 +22,19 @@ export default function MapScreen() {
   const [navigating, setNavigating] = useState(false)
   const [muted, setMutedState] = useState(isMuted())
 
-  const { status, following, fix, recenter } = useUserLocation(map, navigating)
+  // ref du trace actif, lue par la boucle de camera (snap-to-route) sans creer
+  // de dependance circulaire avec le routing (qui a lui besoin de la position)
+  const snapPathRef = useRef<LngLat[] | null>(null)
+  const { status, following, fix, recenter } = useUserLocation(
+    map,
+    navigating,
+    snapPathRef,
+  )
   const routing = useRouting(map, fix?.lngLat ?? null, navigating)
+
+  useEffect(() => {
+    snapPathRef.current = navigating ? routing.route?.path ?? null : null
+  }, [navigating, routing.route])
   const nav = useNavigation(routing.route, fix?.lngLat ?? null, navigating)
   useWakeLock(navigating)
 
