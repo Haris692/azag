@@ -1,0 +1,45 @@
+.screen {
+  position: absolute;
+  inset: 0;
+}
+
+.brandBar {
+  position: absolute;
+  top: calc(var(--az-safe-top) + var(--az-sp-3));
+  left: var(--az-sp-4);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  padding: var(--az-sp-2) var(--az-sp-4);
+  background: var(--az-surface);
+  border-radius: var(--az-r-pill);
+  box-shadow: var(--az-shadow-1);
+}
+
+.wordmark {
+  font-weight: var(--az-fw-bold);
+  font-size: var(--az-fs-lg);
+  letter-spacing: 0.12em;
+  color: var(--az-text);
+}
+
+.keyNotice {
+  position: absolute;
+  left: var(--az-sp-4);
+  right: var(--az-sp-4);
+  bottom: calc(var(--az-safe-bottom) + var(--az-sp-4));
+  z-index: 10;
+  padding: var(--az-sp-3) var(--az-sp-4);
+  background: var(--az-text);
+  color: var(--az-text-inverse);
+  font-size: var(--az-fs-sm);
+  line-height: 1.4;
+  border-radius: var(--az-r-md);
+  box-shadow: var(--az-shadow-2);
+}
+
+.keyNotice code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--az-fs-xs);
+  color: var(--az-accent-soft);
+}

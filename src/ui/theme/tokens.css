@@ -1,0 +1,69 @@
+/*
+ * AZAG design tokens - direction claire minimale, facon Apple Maps.
+ * Sobre, blanc dominant, fort contraste pour la lisibilite en conduite.
+ */
+
+:root {
+  /* --- Surfaces / carte --- */
+  --az-bg: #ffffff;
+  --az-surface: #ffffff;
+  --az-surface-2: #f5f6f7;
+  --az-surface-3: #eceef0;
+  --az-border: #e2e5e8;
+  --az-scrim: rgba(10, 10, 10, 0.32);
+
+  /* --- Texte --- */
+  --az-text: #0a0a0a;
+  --az-text-2: #4a4f55;
+  --az-text-3: #8a9099;
+  --az-text-inverse: #ffffff;
+
+  /* --- Accent principal (itineraire actif, CTA) --- */
+  /* Bleu profond signature AZAG. */
+  --az-accent: #0a63f6;
+  --az-accent-strong: #084fc7;
+  --az-accent-soft: #e6efff;
+
+  /* --- Couleurs semantiques signalements (sobres) --- */
+  --az-danger: #e23b3b;   /* accident / danger */
+  --az-traffic: #f08a24;  /* bouchon */
+  --az-police: #2f6bff;   /* police */
+  --az-caution: #e0b400;  /* objet / vehicule arrete */
+
+  /* --- Typo --- */
+  --az-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --az-fs-nav: 28px;   /* instruction turn-by-turn (gros) */
+  --az-fs-lg: 20px;
+  --az-fs-md: 16px;
+  --az-fs-sm: 14px;
+  --az-fs-xs: 12px;
+  --az-fw-regular: 400;
+  --az-fw-medium: 500;
+  --az-fw-semibold: 600;
+  --az-fw-bold: 700;
+
+  /* --- Rayons --- */
+  --az-r-sm: 8px;
+  --az-r-md: 14px;
+  --az-r-lg: 22px;
+  --az-r-pill: 999px;
+
+  /* --- Espacements --- */
+  --az-sp-1: 4px;
+  --az-sp-2: 8px;
+  --az-sp-3: 12px;
+  --az-sp-4: 16px;
+  --az-sp-5: 24px;
+  --az-sp-6: 32px;
+
+  /* --- Ombres douces --- */
+  --az-shadow-1: 0 1px 2px rgba(10, 10, 10, 0.06), 0 2px 8px rgba(10, 10, 10, 0.08);
+  --az-shadow-2: 0 4px 16px rgba(10, 10, 10, 0.12);
+
+  /* --- Cibles tactiles (accessibilite conduite) --- */
+  --az-touch: 44px;
+
+  /* --- Safe areas (notch) --- */
+  --az-safe-top: env(safe-area-inset-top, 0px);
+  --az-safe-bottom: env(safe-area-inset-bottom, 0px);
+}

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#0A0A0A"/>
+  <!-- pointe de navigation, clin d'oeil dans la marque -->
+  <path d="M32 14 L44 46 L32 39 L20 46 Z" fill="#0A63F6"/>
+</svg>
