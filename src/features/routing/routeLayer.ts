@@ -3,19 +3,36 @@ import maplibregl from 'maplibre-gl'
 import type { Route } from './types'
 
 const SRC = 'az-route'
+const SRC_ALT = 'az-route-alt'
 const LAYER_CASING = 'az-route-casing'
 const LAYER_LINE = 'az-route-line'
+const LAYER_ALT = 'az-route-alt-line'
 
-/** Cree (une fois) la source et les couches du trace d'itineraire. */
+const empty = (): GeoJSON.FeatureCollection => ({
+  type: 'FeatureCollection',
+  features: [],
+})
+
+/** Cree (une fois) les sources et couches du trace d'itineraire. */
 function ensureLayers(map: MapLibreMap) {
   if (map.getSource(SRC)) return
 
-  map.addSource(SRC, {
-    type: 'geojson',
-    data: { type: 'FeatureCollection', features: [] },
+  // alternatives (dessous)
+  map.addSource(SRC_ALT, { type: 'geojson', data: empty() })
+  map.addLayer({
+    id: LAYER_ALT,
+    type: 'line',
+    source: SRC_ALT,
+    layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: {
+      'line-color': '#9aa2ab',
+      'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 16, 6],
+      'line-opacity': 0.55,
+    },
   })
 
-  // casing (contour blanc) pour le contraste sur fond clair
+  // itineraire actif : casing blanc + ligne accent (dessus)
+  map.addSource(SRC, { type: 'geojson', data: empty() })
   map.addLayer({
     id: LAYER_CASING,
     type: 'line',
@@ -27,8 +44,6 @@ function ensureLayers(map: MapLibreMap) {
       'line-opacity': 0.9,
     },
   })
-
-  // ligne accent (itineraire actif)
   map.addLayer({
     id: LAYER_LINE,
     type: 'line',
@@ -41,21 +56,28 @@ function ensureLayers(map: MapLibreMap) {
   })
 }
 
-/** Met a jour le trace affiche. */
-export function drawRoute(map: MapLibreMap, route: Route) {
-  ensureLayers(map)
-  const src = map.getSource(SRC) as maplibregl.GeoJSONSource
-  src.setData({
-    type: 'Feature',
+function lineFeature(route: Route) {
+  return {
+    type: 'Feature' as const,
     properties: {},
-    geometry: { type: 'LineString', coordinates: route.coordinates },
+    geometry: { type: 'LineString' as const, coordinates: route.coordinates },
+  }
+}
+
+/** Affiche l'itineraire actif + les alternatives (grisees). */
+export function drawRoutes(map: MapLibreMap, active: Route, alternatives: Route[]) {
+  ensureLayers(map)
+  ;(map.getSource(SRC) as maplibregl.GeoJSONSource).setData(lineFeature(active))
+  ;(map.getSource(SRC_ALT) as maplibregl.GeoJSONSource).setData({
+    type: 'FeatureCollection',
+    features: alternatives.map(lineFeature),
   })
 }
 
-/** Efface le trace (garde les couches en place, vides). */
+/** Efface tous les traces. */
 export function clearRoute(map: MapLibreMap) {
-  const src = map.getSource(SRC) as maplibregl.GeoJSONSource | undefined
-  src?.setData({ type: 'FeatureCollection', features: [] })
+  ;(map.getSource(SRC) as maplibregl.GeoJSONSource | undefined)?.setData(empty())
+  ;(map.getSource(SRC_ALT) as maplibregl.GeoJSONSource | undefined)?.setData(empty())
 }
 
 /** Cadre la carte sur l'itineraire, avec marge pour les UI haut/bas. */
@@ -66,7 +88,9 @@ export function fitRoute(map: MapLibreMap, route: Route) {
     new maplibregl.LngLatBounds(route.coordinates[0], route.coordinates[0]),
   )
   map.fitBounds(bounds as LngLatBoundsLike, {
-    padding: { top: 130, bottom: 220, left: 50, right: 50 },
+    padding: { top: 130, bottom: 260, left: 50, right: 50 },
     duration: 700,
+    pitch: 0,
+    bearing: 0,
   })
 }

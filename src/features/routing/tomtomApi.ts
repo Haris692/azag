@@ -35,11 +35,16 @@ export async function searchPlaces(
 }
 
 /**
- * Itineraire le plus rapide, trafic en temps reel active.
+ * Itineraires (le plus rapide + alternatives), trafic en temps reel active.
  * Consomme le quota non-tile : n'appeler qu'au besoin (choix destination
- * ou deviation reelle du trace).
+ * ou deviation reelle du trace). Renvoie les routes triees par TomTom
+ * (la premiere = la plus rapide).
  */
-export async function calculateRoute(from: LngLat, to: LngLat): Promise<Route> {
+export async function calculateRoutes(
+  from: LngLat,
+  to: LngLat,
+  maxAlternatives = 2,
+): Promise<Route[]> {
   if (!hasTomTomKey()) throw new Error('no-key')
 
   const loc = `${from.lat},${from.lng}:${to.lat},${to.lng}`
@@ -47,15 +52,19 @@ export async function calculateRoute(from: LngLat, to: LngLat): Promise<Route> {
     `${BASE}/routing/1/calculateRoute/${loc}/json` +
     `?key=${env.tomtomKey}` +
     `&traffic=true&routeType=fastest&travelMode=car` +
+    `&maxAlternatives=${maxAlternatives}` +
     `&instructionsType=text&language=fr-FR`
 
   const res = await fetch(url)
   if (!res.ok) throw new Error(`route ${res.status}`)
   const data = await res.json()
 
-  const route = data.routes?.[0]
-  if (!route) throw new Error('no-route')
+  const routes: any[] = data.routes ?? []
+  if (routes.length === 0) throw new Error('no-route')
+  return routes.map(parseRoute)
+}
 
+function parseRoute(route: any): Route {
   const points: { latitude: number; longitude: number }[] =
     route.legs?.flatMap((l: any) => l.points ?? []) ?? []
 

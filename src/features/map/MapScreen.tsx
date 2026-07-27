@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { Map as MapLibreMap } from 'maplibre-gl'
 import MapView from './MapView'
 import { useUserLocation } from '../location/useUserLocation'
@@ -13,27 +13,31 @@ import { isMuted, primeSpeech, setMuted } from '../../lib/speech'
 import styles from './MapScreen.module.css'
 
 /**
- * Ecran principal : carte + position + routing + guidage (mode conduite).
+ * Ecran principal : carte + position + routing + guidage (mode conduite 3e personne).
  * Les couches signalements arrivent aux phases suivantes.
  */
 export default function MapScreen() {
   const [map, setMap] = useState<MapLibreMap | null>(null)
-  const { status, following, fix, recenter } = useUserLocation(map)
-  const routing = useRouting(map, fix?.lngLat ?? null)
-
   const [navigating, setNavigating] = useState(false)
   const [muted, setMutedState] = useState(isMuted())
 
+  const { status, following, fix, recenter } = useUserLocation(map, navigating)
+  const routing = useRouting(map, fix?.lngLat ?? null, navigating)
   const nav = useNavigation(routing.route, fix?.lngLat ?? null, navigating)
   useWakeLock(navigating)
 
   const hasRoute = routing.destination != null
 
+  // a l'entree en navigation : suivi + vue 3e personne (chase-aware recenter)
+  useEffect(() => {
+    if (navigating) recenter()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigating])
+
   const startNav = useCallback(() => {
     primeSpeech() // debloque la voix (geste utilisateur, requis sur iOS)
     setNavigating(true)
-    recenter() // passe en suivi + zoom niveau rue
-  }, [recenter])
+  }, [])
 
   const stopNav = useCallback(() => {
     setNavigating(false)
@@ -66,10 +70,13 @@ export default function MapScreen() {
       {hasRoute && (
         <RouteSheet
           destination={routing.destination!}
+          routes={routing.routes}
           route={routing.route}
+          selectedIndex={routing.selectedIndex}
           status={routing.status}
           navigating={navigating}
           remaining={nav.remaining}
+          onSelectRoute={routing.selectRoute}
           onStart={startNav}
           onStop={stopNav}
           onClear={routing.clear}

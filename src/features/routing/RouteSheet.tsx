@@ -5,29 +5,34 @@ import styles from './RouteSheet.module.css'
 
 type Props = {
   destination: Place
+  routes: Route[]
   route: Route | null
+  selectedIndex: number
   status: RoutingStatus
   navigating: boolean
   /** distance restante (m) pendant la navigation */
   remaining?: number
+  onSelectRoute: (i: number) => void
   onStart: () => void
   onStop: () => void
   onClear: () => void
 }
 
-/** Feuille basse : apercu (ETA + Demarrer) ou navigation (restant + Terminer). */
+/** Feuille basse : apercu (alternatives + Demarrer) ou navigation (restant + Terminer). */
 export default function RouteSheet({
   destination,
+  routes,
   route,
+  selectedIndex,
   status,
   navigating,
   remaining,
+  onSelectRoute,
   onStart,
   onStop,
   onClear,
 }: Props) {
   const s = route?.summary
-  const hasTraffic = (s?.trafficDelayInSeconds ?? 0) >= 60
   const canStart = status === 'ready' && route != null
 
   return (
@@ -50,7 +55,7 @@ export default function RouteSheet({
       </div>
 
       {status === 'routing' && !s && (
-        <div className={styles.state}>Calcul de l'itineraire...</div>
+        <div className={styles.state}>Calcul des itineraires...</div>
       )}
       {status === 'error' && (
         <div className={styles.state}>
@@ -58,32 +63,52 @@ export default function RouteSheet({
         </div>
       )}
 
-      {s && (
+      {/* NAVIGATION : ETA du trace actif + distance restante */}
+      {navigating && s && (
         <div className={styles.stats}>
           <div className={styles.eta}>{formatDuration(s.travelTimeInSeconds)}</div>
           <div className={styles.meta}>
-            <span>
-              {navigating && remaining != null
-                ? formatDistance(remaining)
-                : formatDistance(s.lengthInMeters)}
-            </span>
+            <span>{formatDistance(remaining ?? s.lengthInMeters)}</span>
             <span className={styles.dot}>&middot;</span>
             <span>arrivee {formatArrival(s.arrivalTime)}</span>
           </div>
-          {hasTraffic && !navigating && (
-            <div className={styles.traffic}>
-              +{formatDuration(s.trafficDelayInSeconds)} de trafic
-            </div>
-          )}
         </div>
       )}
 
+      {/* APERCU : alternatives selectionnables, triees par temps */}
+      {!navigating && routes.length > 0 && (
+        <ul className={styles.options}>
+          {routes.map((r, i) => {
+            const sel = i === selectedIndex
+            const traffic = r.summary.trafficDelayInSeconds >= 60
+            return (
+              <li key={i}>
+                <button
+                  className={`${styles.option} ${sel ? styles.selected : ''}`}
+                  onClick={() => onSelectRoute(i)}
+                >
+                  <span className={styles.optTime}>
+                    {formatDuration(r.summary.travelTimeInSeconds)}
+                  </span>
+                  <span className={styles.optDist}>
+                    {formatDistance(r.summary.lengthInMeters)}
+                  </span>
+                  {traffic ? (
+                    <span className={styles.optTraffic}>
+                      +{formatDuration(r.summary.trafficDelayInSeconds)} trafic
+                    </span>
+                  ) : (
+                    <span className={styles.optClear}>fluide</span>
+                  )}
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+
       {!navigating ? (
-        <button
-          className={styles.go}
-          onClick={onStart}
-          disabled={!canStart}
-        >
+        <button className={styles.go} onClick={onStart} disabled={!canStart}>
           Demarrer
         </button>
       ) : (

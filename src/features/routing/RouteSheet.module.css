@@ -92,6 +92,60 @@
   font-weight: var(--az-fw-medium);
 }
 
+.options {
+  list-style: none;
+  margin-top: var(--az-sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--az-sp-2);
+}
+
+.option {
+  display: flex;
+  align-items: baseline;
+  gap: var(--az-sp-3);
+  width: 100%;
+  text-align: left;
+  padding: var(--az-sp-3) var(--az-sp-4);
+  min-height: var(--az-touch);
+  border-radius: var(--az-r-md);
+  background: var(--az-surface-2);
+  border: 2px solid transparent;
+}
+
+.option.selected {
+  background: var(--az-accent-soft);
+  border-color: var(--az-accent);
+}
+
+.optTime {
+  font-size: var(--az-fs-lg);
+  font-weight: var(--az-fw-bold);
+  color: var(--az-text);
+}
+
+.selected .optTime {
+  color: var(--az-accent-strong);
+}
+
+.optDist {
+  font-size: var(--az-fs-md);
+  color: var(--az-text-2);
+}
+
+.optTraffic {
+  margin-left: auto;
+  font-size: var(--az-fs-sm);
+  font-weight: var(--az-fw-medium);
+  color: #b5610a;
+}
+
+.optClear {
+  margin-left: auto;
+  font-size: var(--az-fs-sm);
+  color: var(--az-text-3);
+}
+
 .go,
 .stop {
   width: 100%;
