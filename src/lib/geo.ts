@@ -18,6 +18,41 @@ export function distanceMeters(a: LngLat, b: LngLat): number {
   return 2 * R * Math.asin(Math.sqrt(h))
 }
 
+/**
+ * Distance (m) entre un point et un segment [a,b], via projection planaire
+ * locale (equirectangulaire, valable sur de courtes distances urbaines).
+ */
+function distancePointToSegment(p: LngLat, a: LngLat, b: LngLat): number {
+  const mPerLat = 111320
+  const mPerLon = 111320 * Math.cos(toRad(p.lat))
+  const px = 0
+  const py = 0
+  const ax = (a.lng - p.lng) * mPerLon
+  const ay = (a.lat - p.lat) * mPerLat
+  const bx = (b.lng - p.lng) * mPerLon
+  const by = (b.lat - p.lat) * mPerLat
+  const dx = bx - ax
+  const dy = by - ay
+  const len2 = dx * dx + dy * dy
+  let t = len2 === 0 ? 0 : ((px - ax) * dx + (py - ay) * dy) / len2
+  t = Math.max(0, Math.min(1, t))
+  const cx = ax + t * dx
+  const cy = ay + t * dy
+  return Math.hypot(px - cx, py - cy)
+}
+
+/** Distance (m) minimale entre un point et une polyligne. */
+export function distanceToPolylineMeters(p: LngLat, line: LngLat[]): number {
+  if (line.length === 0) return Infinity
+  if (line.length === 1) return distanceMeters(p, line[0])
+  let min = Infinity
+  for (let i = 0; i < line.length - 1; i++) {
+    const d = distancePointToSegment(p, line[i], line[i + 1])
+    if (d < min) min = d
+  }
+  return min
+}
+
 /** Cap (bearing) en degres [0..360[, 0 = nord, sens horaire, de a vers b. */
 export function bearingDegrees(a: LngLat, b: LngLat): number {
   const lat1 = toRad(a.lat)

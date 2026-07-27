@@ -22,3 +22,9 @@
 .active {
   color: var(--az-accent);
 }
+
+/* remonte au-dessus de la feuille basse d'itineraire */
+.raised {
+  bottom: calc(var(--az-safe-bottom) + 200px);
+  transition: bottom 0.25s ease;
+}

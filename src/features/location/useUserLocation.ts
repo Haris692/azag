@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import maplibregl, { type Map as MapLibreMap } from 'maplibre-gl'
-import { useGeolocation, type GeoStatus } from './useGeolocation'
+import { useGeolocation, type GeoStatus, type UserFix } from './useGeolocation'
 import { createUserMarkerElement } from './userMarkerElement'
 
 const FOLLOW_ZOOM = 16
@@ -18,6 +18,7 @@ export function useUserLocation(map: MapLibreMap | null): {
   status: GeoStatus
   following: boolean
   hasFix: boolean
+  fix: UserFix | null
   recenter: () => void
 } {
   const { fix, status, request } = useGeolocation()
@@ -93,5 +94,5 @@ export function useUserLocation(map: MapLibreMap | null): {
     }
   }, [map, fix, request])
 
-  return { status, following, hasFix: fix != null, recenter }
+  return { status, following, hasFix: fix != null, fix, recenter }
 }

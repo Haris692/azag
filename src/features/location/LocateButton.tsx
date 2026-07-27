@@ -5,10 +5,12 @@ type Props = {
   status: GeoStatus
   following: boolean
   onClick: () => void
+  /** remonte le bouton quand une feuille basse est affichee */
+  raised?: boolean
 }
 
 /** Bouton flottant de recentrage sur la position utilisateur. */
-export default function LocateButton({ status, following, onClick }: Props) {
+export default function LocateButton({ status, following, onClick, raised }: Props) {
   const active = following && status === 'active'
   const label =
     status === 'denied' ? 'Localisation refusee' : 'Recentrer sur ma position'
@@ -16,7 +18,7 @@ export default function LocateButton({ status, following, onClick }: Props) {
   return (
     <button
       type="button"
-      className={`${styles.btn} ${active ? styles.active : ''}`}
+      className={`${styles.btn} ${active ? styles.active : ''} ${raised ? styles.raised : ''}`}
       onClick={onClick}
       aria-label={label}
       title={label}
