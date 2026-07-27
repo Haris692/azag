@@ -39,4 +39,6 @@ export type Route = {
   path: LngLat[]
   summary: RouteSummary
   instructions: Instruction[]
+  /** part du trajet sur autoroute [0..1] (feature du moteur d'apprentissage) */
+  highwayShare: number
 }

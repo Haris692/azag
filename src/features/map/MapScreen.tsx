@@ -36,8 +36,9 @@ export default function MapScreen() {
 
   const startNav = useCallback(() => {
     primeSpeech() // debloque la voix (geste utilisateur, requis sur iOS)
+    routing.commitLearning(routing.selectedIndex) // apprend du choix confirme
     setNavigating(true)
-  }, [])
+  }, [routing])
 
   const stopNav = useCallback(() => {
     setNavigating(false)
@@ -73,6 +74,7 @@ export default function MapScreen() {
           routes={routing.routes}
           route={routing.route}
           selectedIndex={routing.selectedIndex}
+          suggestion={routing.suggestion}
           status={routing.status}
           navigating={navigating}
           remaining={nav.remaining}

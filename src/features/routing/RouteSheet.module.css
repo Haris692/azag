@@ -102,8 +102,8 @@
 
 .option {
   display: flex;
-  align-items: baseline;
-  gap: var(--az-sp-3);
+  flex-direction: column;
+  gap: var(--az-sp-1);
   width: 100%;
   text-align: left;
   padding: var(--az-sp-3) var(--az-sp-4);
@@ -111,6 +111,19 @@
   border-radius: var(--az-r-md);
   background: var(--az-surface-2);
   border: 2px solid transparent;
+}
+
+.optRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--az-sp-3);
+  width: 100%;
+}
+
+.suggest {
+  font-size: var(--az-fs-xs);
+  font-weight: var(--az-fw-medium);
+  color: var(--az-accent-strong);
 }
 
 .option.selected {

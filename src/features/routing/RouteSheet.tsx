@@ -1,5 +1,6 @@
 import type { Place, Route } from './types'
 import type { RoutingStatus } from './useRouting'
+import type { Suggestion } from '../learning/model'
 import { formatArrival, formatDistance, formatDuration } from '../../lib/format'
 import styles from './RouteSheet.module.css'
 
@@ -8,6 +9,7 @@ type Props = {
   routes: Route[]
   route: Route | null
   selectedIndex: number
+  suggestion: Suggestion | null
   status: RoutingStatus
   navigating: boolean
   /** distance restante (m) pendant la navigation */
@@ -24,6 +26,7 @@ export default function RouteSheet({
   routes,
   route,
   selectedIndex,
+  suggestion,
   status,
   navigating,
   remaining,
@@ -81,24 +84,32 @@ export default function RouteSheet({
           {routes.map((r, i) => {
             const sel = i === selectedIndex
             const traffic = r.summary.trafficDelayInSeconds >= 60
+            const suggested = suggestion?.learned && suggestion.index === i
             return (
               <li key={i}>
                 <button
                   className={`${styles.option} ${sel ? styles.selected : ''}`}
                   onClick={() => onSelectRoute(i)}
                 >
-                  <span className={styles.optTime}>
-                    {formatDuration(r.summary.travelTimeInSeconds)}
-                  </span>
-                  <span className={styles.optDist}>
-                    {formatDistance(r.summary.lengthInMeters)}
-                  </span>
-                  {traffic ? (
-                    <span className={styles.optTraffic}>
-                      +{formatDuration(r.summary.trafficDelayInSeconds)} trafic
+                  <span className={styles.optRow}>
+                    <span className={styles.optTime}>
+                      {formatDuration(r.summary.travelTimeInSeconds)}
                     </span>
-                  ) : (
-                    <span className={styles.optClear}>fluide</span>
+                    <span className={styles.optDist}>
+                      {formatDistance(r.summary.lengthInMeters)}
+                    </span>
+                    {traffic ? (
+                      <span className={styles.optTraffic}>
+                        +{formatDuration(r.summary.trafficDelayInSeconds)} trafic
+                      </span>
+                    ) : (
+                      <span className={styles.optClear}>fluide</span>
+                    )}
+                  </span>
+                  {suggested && (
+                    <span className={styles.suggest}>
+                      &#9733; Suggere pour toi &middot; {suggestion.reason}
+                    </span>
                   )}
                 </button>
               </li>

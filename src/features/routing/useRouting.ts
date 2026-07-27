@@ -4,6 +4,8 @@ import { distanceToPolylineMeters, type LngLat } from '../../lib/geo'
 import { calculateRoutes } from './tomtomApi'
 import { drawRoutes, clearRoute as clearLayer, fitRoute } from './routeLayer'
 import type { Place, Route } from './types'
+import { buildContext } from '../learning/context'
+import { learn, suggest, type Suggestion } from '../learning/model'
 
 export type RoutingStatus = 'idle' | 'routing' | 'ready' | 'error'
 
@@ -21,14 +23,17 @@ export function useRouting(
   routes: Route[]
   route: Route | null
   selectedIndex: number
+  suggestion: Suggestion | null
   status: RoutingStatus
   setDestination: (p: Place) => void
   selectRoute: (i: number) => void
+  commitLearning: (chosenIndex: number) => void
   clear: () => void
 } {
   const [destination, setDestinationState] = useState<Place | null>(null)
   const [routes, setRoutes] = useState<Route[]>([])
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [suggestion, setSuggestion] = useState<Suggestion | null>(null)
   const [status, setStatus] = useState<RoutingStatus>('idle')
 
   const route = routes[selectedIndex] ?? null
@@ -58,10 +63,12 @@ export function useRouting(
       setStatus('routing')
       try {
         const rs = await calculateRoutes(from, to.lngLat)
+        const sug = suggest(rs, buildContext())
         setRoutes(rs)
-        setSelectedIndex(0)
+        setSelectedIndex(sug.index)
+        setSuggestion(sug)
         setStatus('ready')
-        if (fit) fitRoute(map, rs[0])
+        if (fit) fitRoute(map, rs[sug.index])
         offRouteCountRef.current = 0
         lastRecalcRef.current = Date.now()
       } catch {
@@ -84,10 +91,19 @@ export function useRouting(
 
   const selectRoute = useCallback((i: number) => setSelectedIndex(i), [])
 
+  // apprend du choix confirme (appele au demarrage de la navigation)
+  const commitLearning = useCallback(
+    (chosenIndex: number) => {
+      if (routes.length > 1) learn(routes, chosenIndex, buildContext())
+    },
+    [routes],
+  )
+
   const clear = useCallback(() => {
     setDestinationState(null)
     setRoutes([])
     setSelectedIndex(0)
+    setSuggestion(null)
     setStatus('idle')
     offRouteCountRef.current = 0
   }, [])
@@ -112,9 +128,11 @@ export function useRouting(
     routes,
     route,
     selectedIndex,
+    suggestion,
     status,
     setDestination,
     selectRoute,
+    commitLearning,
     clear,
   }
 }

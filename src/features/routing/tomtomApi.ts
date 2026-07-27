@@ -1,6 +1,6 @@
 import { env, hasTomTomKey } from '../../config/env'
 import { LYON_CENTER } from '../../config/constants'
-import type { LngLat } from '../../lib/geo'
+import { distanceMeters, type LngLat } from '../../lib/geo'
 import type { Instruction, Place, Route } from './types'
 
 const BASE = 'https://api.tomtom.com'
@@ -53,6 +53,7 @@ export async function calculateRoutes(
     `?key=${env.tomtomKey}` +
     `&traffic=true&routeType=fastest&travelMode=car` +
     `&maxAlternatives=${maxAlternatives}` +
+    `&sectionType=motorway` +
     `&instructionsType=text&language=fr-FR`
 
   const res = await fetch(url)
@@ -71,6 +72,8 @@ function parseRoute(route: any): Route {
   const path: LngLat[] = points.map((p) => ({ lng: p.longitude, lat: p.latitude }))
   const coordinates = path.map((p): [number, number] => [p.lng, p.lat])
 
+  const highwayShare = computeHighwayShare(path, route.sections ?? [])
+
   const instructions: Instruction[] = (route.guidance?.instructions ?? []).map(
     (i: any): Instruction => ({
       offset: i.routeOffsetInMeters ?? 0,
@@ -85,6 +88,7 @@ function parseRoute(route: any): Route {
     coordinates,
     path,
     instructions,
+    highwayShare,
     summary: {
       lengthInMeters: route.summary.lengthInMeters,
       travelTimeInSeconds: route.summary.travelTimeInSeconds,
@@ -92,4 +96,25 @@ function parseRoute(route: any): Route {
       arrivalTime: route.summary.arrivalTime,
     },
   }
+}
+
+/** Part du trajet sur autoroute [0..1], depuis les sections MOTORWAY. */
+function computeHighwayShare(
+  path: LngLat[],
+  sections: { sectionType?: string; startPointIndex: number; endPointIndex: number }[],
+): number {
+  if (path.length < 2) return 0
+  const segLen = (i: number) => distanceMeters(path[i], path[i + 1])
+
+  let total = 0
+  for (let i = 0; i < path.length - 1; i++) total += segLen(i)
+  if (total === 0) return 0
+
+  let motorway = 0
+  for (const s of sections) {
+    if (s.sectionType !== 'MOTORWAY') continue
+    const end = Math.min(s.endPointIndex, path.length - 1)
+    for (let i = s.startPointIndex; i < end; i++) motorway += segLen(i)
+  }
+  return Math.min(1, motorway / total)
 }
